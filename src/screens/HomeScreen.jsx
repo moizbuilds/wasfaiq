@@ -14,11 +14,29 @@ const STEPS = {
   adapting: 'Adapting for Gulf…',
 }
 
+const PROCESSING_STYLES = `
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+@keyframes progress {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+.processing-emoji {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+.progress-bar {
+  animation: progress 8s linear forwards;
+}
+`
+
 export default function HomeScreen({ onResult }) {
   const [input, setInput] = useState('')
   const [inputType, setInputType] = useState('unknown')
   const [stage, setStage] = useState(null) // null | 'scraping' | 'extracting' | 'adapting'
   const [error, setError] = useState(null)
+  const [inputFocused, setInputFocused] = useState(false)
 
   function handleInputChange(e) {
     const val = e.target.value
@@ -81,6 +99,7 @@ export default function HomeScreen({ onResult }) {
 
   return (
     <div style={{ maxWidth: 640, margin: '80px auto', padding: 32, textAlign: 'center', background: '#fffbf5', minHeight: '100vh' }}>
+      <style>{PROCESSING_STYLES}</style>
       <h1 style={{ fontSize: 36, fontWeight: 800, color: '#1a1a1a', marginBottom: 8 }}>
         وصفة IQ
       </h1>
@@ -89,28 +108,61 @@ export default function HomeScreen({ onResult }) {
       </p>
 
       {stage ? (
-        <div style={{ padding: 48, color: '#c8860a', fontSize: 18 }}>
-          <div style={{ marginBottom: 16, fontSize: 32 }}>⏳</div>
-          {STEPS[stage]}
+        <div style={{ padding: 48, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div className="processing-emoji" style={{ fontSize: 48, marginBottom: 20 }}>⏳</div>
+          <div style={{ fontSize: 18, color: '#c8860a', fontWeight: 600, marginBottom: 16 }}>
+            {STEPS[stage]}
+          </div>
+          <div style={{ width: '100%', maxWidth: 320, background: '#f0e8d8', borderRadius: 2, overflow: 'hidden' }}>
+            <div
+              className="progress-bar"
+              style={{ height: 3, background: '#c8860a', borderRadius: 2, width: 0 }}
+            />
+          </div>
         </div>
       ) : (
-        <>
+        <div style={{
+          background: '#fff',
+          borderRadius: 20,
+          padding: 28,
+          boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+          border: '1px solid #f0e8d8',
+          textAlign: 'left',
+        }}>
+          {inputType !== 'unknown' && input && (
+            <div style={{
+              background: '#fff8ec',
+              border: '1px solid #e8dcc8',
+              borderRadius: 20,
+              padding: '4px 12px',
+              fontSize: 13,
+              color: '#c8860a',
+              display: 'inline-block',
+              marginBottom: 12,
+            }}>
+              {TYPE_LABELS[inputType]}
+            </div>
+          )}
           <input
             type="url"
             value={input}
             onChange={handleInputChange}
+            onFocus={() => setInputFocused(true)}
+            onBlur={() => setInputFocused(false)}
             placeholder="Paste recipe URL, TikTok, or Instagram link…"
             style={{
-              width: '100%', padding: '16px 20px', fontSize: 16,
-              border: '2px solid #e8dcc8', borderRadius: 12, outline: 'none',
-              background: '#fff', marginBottom: 8, boxSizing: 'border-box',
+              width: '100%',
+              padding: '18px 22px',
+              fontSize: 17,
+              border: `2px solid ${inputFocused ? '#c8860a' : '#e8dcc8'}`,
+              borderRadius: 16,
+              outline: 'none',
+              background: '#fff',
+              marginBottom: 8,
+              boxSizing: 'border-box',
+              transition: 'border-color 0.15s',
             }}
           />
-          {inputType !== 'unknown' && input && (
-            <p style={{ color: '#c8860a', fontSize: 14, marginBottom: 12 }}>
-              {TYPE_LABELS[inputType]}
-            </p>
-          )}
           {error && (
             <p style={{ color: '#c0392b', fontSize: 14, marginBottom: 12 }}>{error}</p>
           )}
@@ -118,15 +170,23 @@ export default function HomeScreen({ onResult }) {
             onClick={handleAdapt}
             disabled={!input || inputType === 'unknown'}
             style={{
-              width: '100%', padding: '16px', background: '#c8860a', color: '#fff',
-              border: 'none', borderRadius: 12, fontSize: 18, fontWeight: 600,
+              width: '100%',
+              padding: '16px',
+              background: '#c8860a',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 14,
+              fontSize: 17,
+              fontWeight: 700,
+              letterSpacing: '0.3px',
               cursor: input && inputType !== 'unknown' ? 'pointer' : 'not-allowed',
               opacity: input && inputType !== 'unknown' ? 1 : 0.5,
+              transition: 'opacity 0.15s',
             }}
           >
             Adapt Recipe →
           </button>
-        </>
+        </div>
       )}
     </div>
   )
